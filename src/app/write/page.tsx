@@ -5,7 +5,6 @@ import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
-import { createPost } from "@/lib/posts";
 
 const Editor = dynamic(() => import("@/components/editor"), { ssr: false });
 
@@ -48,22 +47,30 @@ export default function WritePage() {
       excerpt = title;
     }
 
-    const post = await createPost({
-      title,
-      content,
-      excerpt,
-      category,
-      cover_color: coverColor,
-      published: publish,
-    });
+    try {
+      const res = await fetch("/api/posts", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          title,
+          content,
+          excerpt,
+          category,
+          cover_color: coverColor,
+          published: publish,
+        }),
+      });
 
-    setSaving(false);
-
-    if (post) {
-      router.push("/");
-    } else {
+      if (res.ok) {
+        router.push("/");
+      } else {
+        alert("保存失败，请重试");
+      }
+    } catch {
       alert("保存失败，请重试");
     }
+
+    setSaving(false);
   };
 
   return (

@@ -1,4 +1,4 @@
-import { ArrowLeft, MessageCircle } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getPost } from "@/lib/posts";
@@ -116,31 +116,13 @@ export default async function PostPage({ params }: { params: { id: string } }) {
         dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
 
-      {/* 评论区 - Giscus */}
-      <section className="border-t border-neutral-200 pt-8">
+      {/* 评论区 - 暂时禁用，需要配置 Giscus */}
+      {/* <section className="border-t border-neutral-200 pt-8">
         <h2 className="flex items-center gap-2 text-xl font-semibold mb-6">
           <MessageCircle size={24} />
           <span>评论</span>
         </h2>
-
-        {/* Giscus 评论组件 */}
-        <script
-          src="https://giscus.app/client.js"
-          data-repo="mango111/mango-blog"
-          data-repo-id=""
-          data-category="Announcements"
-          data-category-id=""
-          data-mapping="pathname"
-          data-strict="0"
-          data-reactions-enabled="1"
-          data-emit-metadata="0"
-          data-input-position="top"
-          data-theme="light"
-          data-lang="zh-CN"
-          crossOrigin="anonymous"
-          async
-        />
-      </section>
+      </section> */}
     </main>
   );
 }

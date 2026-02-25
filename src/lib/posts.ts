@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase";
+import { createClient } from "@supabase/supabase-js";
 
 export interface Post {
   id: string;
@@ -12,9 +12,17 @@ export interface Post {
   updated_at: string;
 }
 
+// 服务端用的客户端
+function getSupabase() {
+  return createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  );
+}
+
 // 获取所有已发布文章
 export async function getPosts(): Promise<Post[]> {
-  const supabase = createClient();
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("posts")
     .select("*")
@@ -30,7 +38,7 @@ export async function getPosts(): Promise<Post[]> {
 
 // 获取单篇文章
 export async function getPost(id: string): Promise<Post | null> {
-  const supabase = createClient();
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("posts")
     .select("*")
@@ -53,7 +61,7 @@ export async function createPost(post: {
   cover_color?: string;
   published?: boolean;
 }): Promise<Post | null> {
-  const supabase = createClient();
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("posts")
     .insert([post])
@@ -72,7 +80,7 @@ export async function updatePost(
   id: string,
   post: Partial<Post>
 ): Promise<Post | null> {
-  const supabase = createClient();
+  const supabase = getSupabase();
   const { data, error } = await supabase
     .from("posts")
     .update(post)
@@ -89,7 +97,7 @@ export async function updatePost(
 
 // 删除文章
 export async function deletePost(id: string): Promise<boolean> {
-  const supabase = createClient();
+  const supabase = getSupabase();
   const { error } = await supabase.from("posts").delete().eq("id", id);
 
   if (error) {
