@@ -1,7 +1,7 @@
 "use client";
 
-import { useState } from "react";
-import { ArrowLeft, Save } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Save, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
@@ -19,11 +19,40 @@ const coverColors = [
 
 export default function WritePage() {
   const router = useRouter();
+  const [authenticated, setAuthenticated] = useState<boolean | null>(null);
+  const [password, setPassword] = useState("");
+  const [loginError, setLoginError] = useState("");
+  
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("生活");
   const [coverColor, setCoverColor] = useState(coverColors[0].value);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
+
+  // 检查登录状态
+  useEffect(() => {
+    fetch("/api/auth")
+      .then((res) => res.json())
+      .then((data) => setAuthenticated(data.authenticated))
+      .catch(() => setAuthenticated(false));
+  }, []);
+
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError("");
+    
+    const res = await fetch("/api/auth", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+
+    if (res.ok) {
+      setAuthenticated(true);
+    } else {
+      setLoginError("密码错误");
+    }
+  };
 
   const handleSave = async (publish: boolean) => {
     if (!title.trim()) {
@@ -73,6 +102,61 @@ export default function WritePage() {
     setSaving(false);
   };
 
+  // 加载中
+  if (authenticated === null) {
+    return (
+      <main className="flex items-center justify-center min-h-[60vh]">
+        <div className="text-muted">加载中...</div>
+      </main>
+    );
+  }
+
+  // 未登录，显示登录表单
+  if (!authenticated) {
+    return (
+      <main className="flex items-center justify-center min-h-[60vh]">
+        <div className="w-full max-w-sm">
+          <div className="bg-white rounded-2xl border border-neutral-100 shadow-sm p-8">
+            <div className="flex items-center justify-center gap-2 mb-6">
+              <Lock size={24} className="text-neutral-400" />
+              <h1 className="text-xl font-semibold">管理员登录</h1>
+            </div>
+            
+            <form onSubmit={handleLogin}>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="输入密码"
+                className="w-full px-4 py-3 rounded-xl border border-neutral-200 focus:outline-none focus:ring-2 focus:ring-neutral-200 mb-4"
+                autoFocus
+              />
+              
+              {loginError && (
+                <p className="text-red-500 text-sm mb-4">{loginError}</p>
+              )}
+              
+              <button
+                type="submit"
+                className="w-full py-3 bg-neutral-900 text-white rounded-xl hover:bg-neutral-800 transition-colors"
+              >
+                登录
+              </button>
+            </form>
+            
+            <Link
+              href="/"
+              className="block text-center text-sm text-muted mt-4 hover:text-neutral-900"
+            >
+              返回首页
+            </Link>
+          </div>
+        </div>
+      </main>
+    );
+  }
+
+  // 已登录，显示编辑器
   return (
     <main>
       {/* 顶部工具栏 */}
