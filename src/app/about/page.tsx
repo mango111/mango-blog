@@ -8,7 +8,7 @@ export default function AboutPage() {
   ];
 
   return (
-    <div>
+    <div className="animate-fade-in">
       {/* 页面标题 */}
       <header className="mb-10">
         <h1 
@@ -21,11 +21,11 @@ export default function AboutPage() {
 
       {/* 个人介绍 */}
       <section className="post-card mb-8">
-        <div className="flex items-start gap-6">
-          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 flex items-center justify-center text-3xl flex-shrink-0">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+          <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-100 to-blue-50 dark:from-blue-900/30 dark:to-blue-800/20 flex items-center justify-center text-3xl flex-shrink-0">
             🥭
           </div>
-          <div className="flex-1">
+          <div className="flex-1 text-center sm:text-left">
             <h2 className="text-xl font-semibold text-[var(--text-primary)] mb-2">
               Mango
             </h2>
@@ -33,7 +33,7 @@ export default function AboutPage() {
               一个热爱阅读、探索 AI 技术、记录生活的普通人。相信科技应该普惠大众，
               希望通过文字分享自己的学习心得与生活感悟。
             </p>
-            <div className="flex items-center gap-4 text-sm text-[var(--text-muted)]">
+            <div className="flex items-center justify-center sm:justify-start gap-4 text-sm text-[var(--text-muted)]">
               <span className="flex items-center gap-1">
                 <MapPin size={14} />
                 中国
@@ -83,7 +83,11 @@ export default function AboutPage() {
         </h2>
         <div className="timeline">
           {milestones.map((item, index) => (
-            <div key={index} className="timeline-item">
+            <div 
+              key={index} 
+              className="timeline-item"
+              style={{ animationDelay: `${index * 0.1}s` }}
+            >
               <div className="timeline-date">{item.date}</div>
               <div className="timeline-content">{item.content}</div>
             </div>
@@ -99,19 +103,19 @@ export default function AboutPage() {
         >
           联系我
         </h2>
-        <div className="flex gap-4">
+        <div className="flex flex-col sm:flex-row gap-4">
           <a
             href="https://github.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="post-card flex items-center gap-3 px-5 py-3 hover:border-[var(--accent)]"
+            className="post-card flex items-center justify-center sm:justify-start gap-3 px-5 py-3 hover:border-[var(--accent)]"
           >
             <Github size={20} className="text-[var(--text-secondary)]" />
             <span className="text-sm text-[var(--text-secondary)]">GitHub</span>
           </a>
           <a
             href="mailto:hello@example.com"
-            className="post-card flex items-center gap-3 px-5 py-3 hover:border-[var(--accent)]"
+            className="post-card flex items-center justify-center sm:justify-start gap-3 px-5 py-3 hover:border-[var(--accent)]"
           >
             <Mail size={20} className="text-[var(--text-secondary)]" />
             <span className="text-sm text-[var(--text-secondary)]">Email</span>
@@ -121,7 +125,7 @@ export default function AboutPage() {
 
       {/* 版权声明 */}
       <footer className="mt-12 pt-8 border-t border-[var(--border)]">
-        <p className="text-sm text-[var(--text-muted)] leading-relaxed">
+        <p className="text-sm text-[var(--text-muted)] leading-relaxed text-center sm:text-left">
           本站作品采用 
           <a 
             href="https://creativecommons.org/licenses/by-nc-sa/4.0/" 
