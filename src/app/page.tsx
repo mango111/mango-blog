@@ -1,42 +1,33 @@
 import Link from "next/link";
 import { BookOpen, Brain, Heart, PenLine } from "lucide-react";
+import { getPosts } from "@/lib/posts";
 
-// 模拟数据，后续接 Supabase
-const posts = [
-  {
-    id: "1",
-    title: "开始我的博客之旅",
-    excerpt: "记录生活，分享思考，这是我的第一篇博客...",
-    category: "生活",
-    createdAt: "2026-02-25",
-    coverColor: "from-purple-400 to-pink-400",
-  },
-  {
-    id: "2", 
-    title: "AI 学习笔记：大模型入门",
-    excerpt: "从 Transformer 到 GPT，理解现代 AI 的基础架构...",
-    category: "AI学习",
-    createdAt: "2026-02-24",
-    coverColor: "from-blue-400 to-cyan-400",
-  },
-  {
-    id: "3",
-    title: "《思考，快与慢》读书笔记",
-    excerpt: "丹尼尔·卡尼曼带我们探索人类思维的两个系统...",
-    category: "阅读",
-    createdAt: "2026-02-23",
-    coverColor: "from-amber-400 to-orange-400",
-  },
-];
+const categoryIcons: Record<string, typeof BookOpen> = {
+  "阅读": BookOpen,
+  "AI学习": Brain,
+  "生活": Heart,
+};
 
-const categories = [
-  { name: "全部", icon: BookOpen, count: 12 },
-  { name: "阅读", icon: BookOpen, count: 5 },
-  { name: "AI学习", icon: Brain, count: 4 },
-  { name: "生活", icon: Heart, count: 3 },
-];
+export const dynamic = "force-dynamic"; // 强制动态渲染
 
-export default function Home() {
+export default async function Home() {
+  const posts = await getPosts();
+
+  // 统计分类
+  const categoryCounts = posts.reduce((acc, post) => {
+    acc[post.category] = (acc[post.category] || 0) + 1;
+    return acc;
+  }, {} as Record<string, number>);
+
+  const categories = [
+    { name: "全部", icon: BookOpen, count: posts.length },
+    ...Object.entries(categoryCounts).map(([name, count]) => ({
+      name,
+      icon: categoryIcons[name] || BookOpen,
+      count,
+    })),
+  ];
+
   return (
     <main>
       {/* Header */}
@@ -72,33 +63,41 @@ export default function Home() {
 
       {/* 文章卡片列表 */}
       <div className="grid gap-6">
-        {posts.map((post) => (
-          <Link key={post.id} href={`/post/${post.id}`}>
-            <article className="card-hover bg-white rounded-2xl overflow-hidden border border-neutral-100 shadow-sm">
-              <div className="flex">
-                {/* 彩色装饰条 */}
-                <div className={`w-2 bg-gradient-to-b ${post.coverColor}`} />
-                
-                <div className="flex-1 p-6">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-muted">
-                      {post.category}
-                    </span>
-                    <span className="text-xs text-muted">{post.createdAt}</span>
+        {posts.length === 0 ? (
+          <div className="text-center py-12 text-muted">
+            <p>还没有文章，去写一篇吧！</p>
+          </div>
+        ) : (
+          posts.map((post) => (
+            <Link key={post.id} href={`/post/${post.id}`}>
+              <article className="card-hover bg-white rounded-2xl overflow-hidden border border-neutral-100 shadow-sm">
+                <div className="flex">
+                  {/* 彩色装饰条 */}
+                  <div className={`w-2 bg-gradient-to-b ${post.cover_color}`} />
+
+                  <div className="flex-1 p-6">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs px-2 py-0.5 rounded-full bg-neutral-100 text-muted">
+                        {post.category}
+                      </span>
+                      <span className="text-xs text-muted">
+                        {new Date(post.created_at).toLocaleDateString("zh-CN")}
+                      </span>
+                    </div>
+
+                    <h2 className="text-xl font-semibold mb-2 text-neutral-900">
+                      {post.title}
+                    </h2>
+
+                    <p className="text-neutral-600 line-clamp-2">
+                      {post.excerpt}
+                    </p>
                   </div>
-                  
-                  <h2 className="text-xl font-semibold mb-2 text-neutral-900">
-                    {post.title}
-                  </h2>
-                  
-                  <p className="text-neutral-600 line-clamp-2">
-                    {post.excerpt}
-                  </p>
                 </div>
-              </div>
-            </article>
-          </Link>
-        ))}
+              </article>
+            </Link>
+          ))
+        )}
       </div>
 
       {/* Footer */}

@@ -3,33 +3,67 @@
 import { useState } from "react";
 import { ArrowLeft, Save } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import dynamic from "next/dynamic";
+import { createPost } from "@/lib/posts";
 
-// 动态导入 Novel 编辑器，避免 SSR 问题
 const Editor = dynamic(() => import("@/components/editor"), { ssr: false });
 
 const categories = ["阅读", "AI学习", "生活"];
+const coverColors = [
+  { name: "紫粉", value: "from-purple-400 to-pink-400" },
+  { name: "蓝青", value: "from-blue-400 to-cyan-400" },
+  { name: "橙黄", value: "from-amber-400 to-orange-400" },
+  { name: "绿青", value: "from-green-400 to-teal-400" },
+  { name: "红橙", value: "from-red-400 to-orange-400" },
+];
 
 export default function WritePage() {
+  const router = useRouter();
   const [title, setTitle] = useState("");
   const [category, setCategory] = useState("生活");
+  const [coverColor, setCoverColor] = useState(coverColors[0].value);
   const [content, setContent] = useState("");
   const [saving, setSaving] = useState(false);
 
-  const handleSave = async () => {
+  const handleSave = async (publish: boolean) => {
     if (!title.trim()) {
       alert("请输入标题");
       return;
     }
-    
+
     setSaving(true);
-    // TODO: 保存到 Supabase
-    console.log({ title, category, content });
-    
-    setTimeout(() => {
-      setSaving(false);
-      alert("保存成功！");
-    }, 1000);
+
+    // 生成摘要（取前100字）
+    let excerpt = "";
+    try {
+      const json = JSON.parse(content);
+      const extractText = (node: any): string => {
+        if (node.type === "text") return node.text || "";
+        if (node.content) return node.content.map(extractText).join("");
+        return "";
+      };
+      excerpt = extractText(json).slice(0, 100) + "...";
+    } catch {
+      excerpt = title;
+    }
+
+    const post = await createPost({
+      title,
+      content,
+      excerpt,
+      category,
+      cover_color: coverColor,
+      published: publish,
+    });
+
+    setSaving(false);
+
+    if (post) {
+      router.push("/");
+    } else {
+      alert("保存失败，请重试");
+    }
   };
 
   return (
@@ -44,7 +78,7 @@ export default function WritePage() {
           <span>返回</span>
         </Link>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {/* 分类选择 */}
           <select
             value={category}
@@ -58,9 +92,31 @@ export default function WritePage() {
             ))}
           </select>
 
-          {/* 保存按钮 */}
+          {/* 颜色选择 */}
+          <select
+            value={coverColor}
+            onChange={(e) => setCoverColor(e.target.value)}
+            className="px-3 py-1.5 rounded-lg border border-neutral-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-neutral-200"
+          >
+            {coverColors.map((color) => (
+              <option key={color.value} value={color.value}>
+                {color.name}
+              </option>
+            ))}
+          </select>
+
+          {/* 保存草稿 */}
           <button
-            onClick={handleSave}
+            onClick={() => handleSave(false)}
+            disabled={saving}
+            className="px-4 py-2 border border-neutral-200 rounded-full hover:bg-neutral-50 transition-colors disabled:opacity-50 text-sm"
+          >
+            存草稿
+          </button>
+
+          {/* 发布按钮 */}
+          <button
+            onClick={() => handleSave(true)}
             disabled={saving}
             className="flex items-center gap-2 px-4 py-2 bg-neutral-900 text-white rounded-full hover:bg-neutral-800 transition-colors disabled:opacity-50"
           >

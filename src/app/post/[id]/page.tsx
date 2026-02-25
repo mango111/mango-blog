@@ -1,28 +1,91 @@
 import { ArrowLeft, MessageCircle } from "lucide-react";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { getPost } from "@/lib/posts";
 
-// 模拟数据
-const post = {
-  id: "1",
-  title: "开始我的博客之旅",
-  content: `
-    <p>这是我的第一篇博客文章。</p>
-    <p>我决定开始记录自己的阅读、AI学习和生活感悟。写作是一种思考的方式，通过文字整理自己的想法，也许能帮助到其他人。</p>
-    <h2>为什么要写博客？</h2>
-    <p>在这个信息爆炸的时代，我们每天接收大量的信息，但真正内化成自己知识的却很少。写博客是一种强迫自己深度思考的方式。</p>
-    <h2>我会写什么？</h2>
-    <ul>
-      <li><strong>阅读笔记</strong>：分享读过的好书和思考</li>
-      <li><strong>AI学习</strong>：记录学习人工智能的过程</li>
-      <li><strong>生活感悟</strong>：日常生活中的思考和感悟</li>
-    </ul>
-    <p>希望这个博客能成为我成长的记录，也希望能对你有所帮助。</p>
-  `,
-  category: "生活",
-  createdAt: "2026-02-25",
-};
+export const dynamic = "force-dynamic";
 
-export default function PostPage({ params }: { params: { id: string } }) {
+// 将 Novel JSON 转换为 HTML（简化版）
+function renderContent(content: string | null): string {
+  if (!content) return "<p>暂无内容</p>";
+  
+  try {
+    const json = JSON.parse(content);
+    return renderNode(json);
+  } catch {
+    return "<p>内容解析错误</p>";
+  }
+}
+
+function renderNode(node: any): string {
+  if (!node) return "";
+  
+  if (node.type === "doc") {
+    return (node.content || []).map(renderNode).join("");
+  }
+  
+  if (node.type === "paragraph") {
+    const text = (node.content || []).map(renderNode).join("");
+    return `<p>${text || "<br>"}</p>`;
+  }
+  
+  if (node.type === "heading") {
+    const level = node.attrs?.level || 2;
+    const text = (node.content || []).map(renderNode).join("");
+    return `<h${level}>${text}</h${level}>`;
+  }
+  
+  if (node.type === "bulletList") {
+    const items = (node.content || []).map(renderNode).join("");
+    return `<ul>${items}</ul>`;
+  }
+  
+  if (node.type === "orderedList") {
+    const items = (node.content || []).map(renderNode).join("");
+    return `<ol>${items}</ol>`;
+  }
+  
+  if (node.type === "listItem") {
+    const content = (node.content || []).map(renderNode).join("");
+    return `<li>${content}</li>`;
+  }
+  
+  if (node.type === "blockquote") {
+    const content = (node.content || []).map(renderNode).join("");
+    return `<blockquote>${content}</blockquote>`;
+  }
+  
+  if (node.type === "codeBlock") {
+    const text = (node.content || []).map(renderNode).join("");
+    return `<pre><code>${text}</code></pre>`;
+  }
+  
+  if (node.type === "text") {
+    let text = node.text || "";
+    const marks = node.marks || [];
+    
+    for (const mark of marks) {
+      if (mark.type === "bold") text = `<strong>${text}</strong>`;
+      if (mark.type === "italic") text = `<em>${text}</em>`;
+      if (mark.type === "code") text = `<code>${text}</code>`;
+      if (mark.type === "link") text = `<a href="${mark.attrs?.href}">${text}</a>`;
+    }
+    
+    return text;
+  }
+  
+  return "";
+}
+
+export default async function PostPage({ params }: { params: { id: string } }) {
+  const post = await getPost(params.id);
+  
+  if (!post) {
+    notFound();
+  }
+
+  const htmlContent = renderContent(post.content);
+
   return (
     <main>
       {/* 返回按钮 */}
@@ -40,7 +103,9 @@ export default function PostPage({ params }: { params: { id: string } }) {
           <span className="text-sm px-3 py-1 rounded-full bg-neutral-100 text-muted">
             {post.category}
           </span>
-          <span className="text-sm text-muted">{post.createdAt}</span>
+          <span className="text-sm text-muted">
+            {new Date(post.created_at).toLocaleDateString("zh-CN")}
+          </span>
         </div>
         <h1 className="text-4xl font-bold tracking-tight">{post.title}</h1>
       </header>
@@ -48,21 +113,33 @@ export default function PostPage({ params }: { params: { id: string } }) {
       {/* 文章内容 */}
       <article
         className="prose prose-lg max-w-none mb-12"
-        dangerouslySetInnerHTML={{ __html: post.content }}
+        dangerouslySetInnerHTML={{ __html: htmlContent }}
       />
 
-      {/* 评论区 */}
+      {/* 评论区 - Giscus */}
       <section className="border-t border-neutral-200 pt-8">
         <h2 className="flex items-center gap-2 text-xl font-semibold mb-6">
           <MessageCircle size={24} />
           <span>评论</span>
         </h2>
-        
-        {/* Giscus 评论组件占位 */}
-        <div className="bg-neutral-50 rounded-xl p-8 text-center text-muted">
-          <p>评论功能即将上线</p>
-          <p className="text-sm mt-2">基于 GitHub Discussions</p>
-        </div>
+
+        {/* Giscus 评论组件 */}
+        <script
+          src="https://giscus.app/client.js"
+          data-repo="mango111/mango-blog"
+          data-repo-id=""
+          data-category="Announcements"
+          data-category-id=""
+          data-mapping="pathname"
+          data-strict="0"
+          data-reactions-enabled="1"
+          data-emit-metadata="0"
+          data-input-position="top"
+          data-theme="light"
+          data-lang="zh-CN"
+          crossOrigin="anonymous"
+          async
+        />
       </section>
     </main>
   );
