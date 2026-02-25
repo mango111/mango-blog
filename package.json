@@ -12,6 +12,7 @@
     "@aws-sdk/client-s3": "^3.997.0",
     "@supabase/ssr": "^0.4.0",
     "@supabase/supabase-js": "^2.45.0",
+    "@tiptap/extension-image": "^2.27.2",
     "@tiptap/extension-placeholder": "^2.11.0",
     "@tiptap/react": "^2.11.0",
     "@tiptap/starter-kit": "^2.11.0",
